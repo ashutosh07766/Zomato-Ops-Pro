@@ -270,12 +270,33 @@ const ManagerDashboard: React.FC = () => {
                                                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${getStatusColor(order.status)}`}>
                                                         {order.status}
                                                     </span>
+                                                    {order.status === 'PREP' && (
+                                                        <div className="mt-1 text-xs text-gray-500">
+                                                            {(() => {
+                                                                const now = new Date();
+                                                                const created = new Date(order.createdAt);
+                                                                const prepTime = order.prepTime || 0;
+                                                                const readyTime = new Date(created.getTime() + prepTime * 60000);
+                                                                const remaining = Math.max(0, Math.ceil((readyTime.getTime() - now.getTime()) / 60000));
+                                                                return remaining > 0 ? `Ready in ${remaining} min` : 'Ready to mark as ready';
+                                                            })()}
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                     {order.assignedPartner?.name ? order.assignedPartner.name : <span className="text-gray-400">-</span>}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                                    {order.dispatchTime ? new Date(order.dispatchTime).toLocaleString() : 'Not set'}
+                                                    {order.dispatchTime ? (
+                                                        <div className="flex flex-col">
+                                                            <span className="text-gray-900 font-medium">
+                                                                {new Date(order.dispatchTime).toLocaleTimeString()}
+                                                            </span>
+                                                            <span className="text-xs text-gray-500">
+                                                                {new Date(order.dispatchTime).toLocaleDateString()}
+                                                            </span>
+                                                        </div>
+                                                    ) : 'Not set'}
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                                     <div className="flex space-x-2">

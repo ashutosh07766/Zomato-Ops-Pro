@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.Duration;
 import java.util.List;
 
 @Service
@@ -31,6 +32,13 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(Order order) {
+        if (order.getPrepTime() == null) {
+            throw new RuntimeException("Prep time is required");
+        }
+        
+        // Calculate initial dispatch time based on prep time
+        LocalDateTime dispatchTime = LocalDateTime.now().plusMinutes(order.getPrepTime());
+        order.setDispatchTime(dispatchTime);
         order.setStatus(OrderStatus.PREP);
         return orderRepository.save(order);
     }
@@ -56,20 +64,16 @@ public class OrderService {
             throw new RuntimeException("Can only assign partner when order is in PREP or READY state");
         }
 
-        if (order.getPrepTime() == null) {
-            throw new RuntimeException("Order prep time is not set");
+        // Update dispatch time to include partner's ETA
+        if (partner.getEta() != null) {
+            LocalDateTime currentDispatchTime = order.getDispatchTime();
+            if (currentDispatchTime == null) {
+                currentDispatchTime = LocalDateTime.now();
+            }
+            order.setDispatchTime(currentDispatchTime.plusMinutes(partner.getEta()));
         }
-        if (partner.getEta() == null) {
-            throw new RuntimeException("Partner ETA is not set");
-        }
-
-        // Calculate dispatch time: prepTime + ETA
-        LocalDateTime dispatchTime = LocalDateTime.now()
-                .plusMinutes(order.getPrepTime())
-                .plusMinutes(partner.getEta());
 
         order.setAssignedPartner(partner);
-        order.setDispatchTime(dispatchTime);
         partner.setIsAvailable(false);
 
         deliveryPartnerRepository.save(partner);
@@ -84,6 +88,20 @@ public class OrderService {
         // Validate status transition
         if (!isValidStatusTransition(order.getStatus(), newStatus)) {
             throw new RuntimeException("Invalid status transition");
+        }
+
+        // Check if order can be marked as ready
+        if (newStatus == OrderStatus.READY) {
+            LocalDateTime now = LocalDateTime.now();
+            LocalDateTime minReadyTime = order.getCreatedAt().plusMinutes(order.getPrepTime());
+            
+            if (now.isBefore(minReadyTime)) {
+                Duration remainingTime = Duration.between(now, minReadyTime);
+                long remainingMinutes = remainingTime.toMinutes();
+                throw new RuntimeException(
+                    String.format("Order cannot be marked as ready yet. Please wait %d more minutes.", remainingMinutes)
+                );
+            }
         }
 
         order.setStatus(newStatus);

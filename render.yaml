@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: zomato-opspro-backend
+    env: java
+    buildCommand: ./mvnw clean package -DskipTests
+    startCommand: java -jar target/opspro-0.0.1-SNAPSHOT.jar
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SPRING_DATASOURCE_URL
+        fromDatabase:
+          name: zomato-opspro-db
+          property: connectionString
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: zomato-opspro-db
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: zomato-opspro-db
+          property: password
+
+databases:
+  - name: zomato-opspro-db
+    databaseName: opspro
+    plan: free 
