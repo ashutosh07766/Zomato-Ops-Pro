@@ -25,7 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:5174}")
+    @Value("${app.cors.allowed-origins:http://localhost:5173}")
     private String allowedOrigins;
 
     @Bean
@@ -34,13 +34,11 @@ public class SecurityConfig {
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/h2-console/**", "/swagger-ui/**", "/v3/api-docs/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/orders/**").hasAnyRole("MANAGER", "PARTNER")
                 .requestMatchers("/api/partners/**").hasAnyRole("MANAGER", "PARTNER")
                 .anyRequest().authenticated()
             )
-            .headers(headers -> headers.frameOptions().disable())
             .httpBasic();
 
         return http.build();
@@ -67,7 +65,7 @@ public class SecurityConfig {
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
-        configuration.setMaxAge(3600L); // Cache preflight requests for 1 hour
+        configuration.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
