@@ -14,7 +14,7 @@ const ManagerDashboard: React.FC = () => {
     const [selectedPartner, setSelectedPartner] = useState<DeliveryPartner | null>(null);
     const [showCreateOrder, setShowCreateOrder] = useState(false);
     const [newOrder, setNewOrder] = useState({ orderId: '', items: '', prepTime: 0 });
-    const [createOrderError, setCreateOrderError] = useState('');
+    const [createOrderError, setCreateOrderError] = useState<string>('');
     const [showAssignModal, setShowAssignModal] = useState(false);
 
     useEffect(() => {
@@ -99,7 +99,7 @@ const ManagerDashboard: React.FC = () => {
         }
     };
 
-    const filteredPartners = partners.filter(p => p.isAvailable && !orders.some(o => o.assignedPartner?.id === p.id));
+    const filteredPartners = partners.filter(partner => partner.isAvailable);
 
     const assignedPartnerIds = orders.filter(order => order.status !== 'DELIVERED' && order.assignedPartner)
         .map(order => order.assignedPartner!.id);
