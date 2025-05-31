@@ -5,9 +5,15 @@ import Login from './components/Login';
 import ManagerDashboard from './components/ManagerDashboard';
 import PartnerDashboard from './components/PartnerDashboard.tsx';
 
-const PrivateRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const PrivateRoute: React.FC<{ children: React.ReactNode; allowedRole: string }> = ({ children, allowedRole }) => {
     const { user } = useAuth();
-    return user ? <>{children}</> : <Navigate to="/login" />;
+    if (!user) {
+        return <Navigate to="/login" />;
+    }
+    if (user.role !== allowedRole) {
+        return <Navigate to={user.role === 'MANAGER' ? '/manager' : '/partner'} />;
+    }
+    return <>{children}</>;
 };
 
 const AppRoutes: React.FC = () => {
@@ -32,21 +38,17 @@ const AppRoutes: React.FC = () => {
                 <Route
                     path="/manager"
                     element={
-                        user.role === 'MANAGER' ? (
+                        <PrivateRoute allowedRole="MANAGER">
                             <ManagerDashboard />
-                        ) : (
-                            <Navigate to="/partner" />
-                        )
+                        </PrivateRoute>
                     }
                 />
                 <Route
                     path="/partner"
                     element={
-                        user.role === 'PARTNER' ? (
+                        <PrivateRoute allowedRole="PARTNER">
                             <PartnerDashboard />
-                        ) : (
-                            <Navigate to="/manager" />
-                        )
+                        </PrivateRoute>
                     }
                 />
                 <Route path="*" element={<Navigate to={user.role === 'MANAGER' ? '/manager' : '/partner'} />} />
