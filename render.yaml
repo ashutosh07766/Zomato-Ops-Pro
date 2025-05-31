@@ -6,6 +6,8 @@ services:
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
+      - key: PORT
+        value: 8082
       - key: SPRING_DATASOURCE_URL
         fromDatabase:
           name: zomato-opspro-db
@@ -18,6 +20,16 @@ services:
         fromDatabase:
           name: zomato-opspro-db
           property: password
+
+  - type: web
+    name: zomato-opspro-frontend
+    env: docker
+    dockerfilePath: ./frontend/Dockerfile
+    envVars:
+      - key: VITE_API_URL
+        value: https://zomato-opspro-backend.onrender.com
+    healthCheckPath: /
+    autoDeploy: true
 
 databases:
   - name: zomato-opspro-db
